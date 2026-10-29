@@ -73,3 +73,22 @@ export const readNight: ReadNight = (runsDir, night) => {
     badLines,
   };
 };
+
+export type StatusCounts = Record<RunStatus, number>;
+
+// Run lines per status for one night, null when the file is missing. Unparseable lines are skipped.
+export function countStatuses(runsDir: string, night: string): StatusCounts | null {
+  if (!NIGHT.test(night)) return null;
+  let text: string;
+  try {
+    text = readFileSync(join(runsDir, `${night}.jsonl`), 'utf8');
+  } catch {
+    return null;
+  }
+  const counts: StatusCounts = { ok: 0, retry: 0, fail: 0 };
+  for (const raw of text.split('\n')) {
+    const line = parseLine(raw);
+    if (line) counts[line.status] += 1;
+  }
+  return counts;
+}
